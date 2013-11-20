@@ -1,0 +1,18 @@
+-
+        key:    a
+        hash:   
+                1: A
+                2: B
+                3: C
+-
+        key:    b
+        hash:   
+                10: AA
+                20: BB
+                30: CC
+-
+        key:    c
+        hash:   
+                100: AAA
+                200: BBB
+                300: CCC
