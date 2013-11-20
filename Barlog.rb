@@ -47,7 +47,14 @@ yaml = YAML.load_file($convertfilename)
 
 yaml.each { |ptn| 
   table.each { |row| 
-    row[ptn["key"].to_sym] = ptn["hash"][row[ptn["key"].to_sym]]
+    key = ptn["key"].to_sym
+    val = row[key]
+    new_val = ptn["hash"][val]
+    if new_val == nil then
+      row[key] = val
+    else
+      row[key] = new_val
+    end
   }
 }
 
