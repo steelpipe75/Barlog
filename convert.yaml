@@ -1,5 +1,6 @@
 -
         key:    a
+        condition: <%= (row[:b] == 10) %>
         hash:   
                 1: A
                 2: B

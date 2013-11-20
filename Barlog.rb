@@ -18,6 +18,7 @@ require 'pp'
 require 'optparse'
 require 'csv'
 require 'yaml'
+require 'erb'
 
 # parameter
 
@@ -47,13 +48,23 @@ yaml = YAML.load_file($convertfilename)
 
 yaml.each { |ptn| 
   table.each { |row| 
-    key = ptn["key"].to_sym
-    val = row[key]
-    new_val = ptn["hash"][val]
-    if new_val == nil then
-      row[key] = val
+    flg = "false"
+    if ptn["condition"] == nil then
+      flg = "true"
     else
-      row[key] = new_val
+      erb = ERB.new(ptn["condition"])
+      flg = erb.result(binding)
+    end
+    
+    if flg == "true" then
+      key = ptn["key"].to_sym
+      val = row[key]
+      new_val = ptn["hash"][val]
+      if new_val == nil then
+        row[key] = val
+      else
+        row[key] = new_val
+      end
     end
   }
 }
