@@ -1,4 +1,12 @@
 -
+        job:    script
+        key:    c
+        param:  <%= val * 10 %>
+-
+        job:    script
+        key:    b
+        param:  <%= val / 10 %>
+-
         job:    hash
         key:    a
         cond:   <%= (row[:b] == 10) %>

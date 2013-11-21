@@ -48,6 +48,24 @@ yaml = YAML.load_file($convertfilename)
 
 yaml.each { |ptn| 
   case ptn["job"]
+  when "script"
+    table.each { |row| 
+      flg = "false"
+      if ptn["cond"] == nil then
+        flg = "true"
+      else
+        erb = ERB.new(ptn["cond"])
+        flg = erb.result(binding)
+      end
+      
+      if flg == "true" then
+        key = ptn["key"].to_sym
+        val = row[key]
+        erb = ERB.new(ptn["param"])
+        new_val = erb.result(binding)
+        row[key] = new_val.to_i
+      end
+    }
   when "hash"
     table.each { |row| 
       flg = "false"
