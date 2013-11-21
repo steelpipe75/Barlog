@@ -49,10 +49,10 @@ yaml = YAML.load_file($convertfilename)
 yaml.each { |ptn| 
   table.each { |row| 
     flg = "false"
-    if ptn["condition"] == nil then
+    if ptn["cond"] == nil then
       flg = "true"
     else
-      erb = ERB.new(ptn["condition"])
+      erb = ERB.new(ptn["cond"])
       flg = erb.result(binding)
     end
     
