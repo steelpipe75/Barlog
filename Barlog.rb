@@ -39,6 +39,7 @@ def option_parse(argv)
 
   puts sprintf("inputfile\t= \"%s\"\n",$inputfilename)
   puts sprintf("outputfile\t= \"%s\"\n",$outputfilename)
+  puts sprintf("convertfile\t= \"%s\"\n",$convertfilename)
 end
 
 option_parse(ARGV)
