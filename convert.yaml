@@ -1,19 +1,22 @@
 -
+        job:    hash
         key:    a
-        cond: <%= (row[:b] == 10) %>
-        hash:   
+        cond:   <%= (row[:b] == 10) %>
+        param:  
                 1: A
                 2: B
                 3: C
 -
+        job:    hash
         key:    b
-        hash:   
+        param:  
                 10: AA
                 20: BB
                 30: CC
 -
+        job:    hash
         key:    c
-        hash:   
+        param:  
                 100: AAA
                 200: BBB
                 300: CCC

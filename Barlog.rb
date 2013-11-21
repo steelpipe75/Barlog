@@ -47,26 +47,29 @@ table = CSV.table($inputfilename)
 yaml = YAML.load_file($convertfilename)
 
 yaml.each { |ptn| 
-  table.each { |row| 
-    flg = "false"
-    if ptn["cond"] == nil then
-      flg = "true"
-    else
-      erb = ERB.new(ptn["cond"])
-      flg = erb.result(binding)
-    end
-    
-    if flg == "true" then
-      key = ptn["key"].to_sym
-      val = row[key]
-      new_val = ptn["hash"][val]
-      if new_val == nil then
-        row[key] = val
+  case ptn["job"]
+  when "hash"
+    table.each { |row| 
+      flg = "false"
+      if ptn["cond"] == nil then
+        flg = "true"
       else
-        row[key] = new_val
+        erb = ERB.new(ptn["cond"])
+        flg = erb.result(binding)
       end
-    end
-  }
+      
+      if flg == "true" then
+        key = ptn["key"].to_sym
+        val = row[key]
+        new_val = ptn["param"][val]
+        if new_val == nil then
+          row[key] = val
+        else
+          row[key] = new_val
+        end
+      end
+    }
+  end
 }
 
 File.open($outputfilename,"w") do |file|
