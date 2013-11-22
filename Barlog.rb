@@ -44,13 +44,13 @@ end
 
 option_parse(ARGV)
 
-table = CSV.table($inputfilename)
+table = CSV.read($inputfilename, headers:true, converters: :numeric)
 yaml = YAML.load_file($convertfilename)
 
 yaml.each { |ptn| 
   if ptn["job"] == "sort" then
     str = []
-    key = ptn["key"].to_sym
+    key = ptn["key"]
     if ptn["param"] == "ascending" then
       new_table = table.sort_by { |row| row[key] }
     else
@@ -60,7 +60,7 @@ yaml.each { |ptn|
     new_table.each { |row|
       str = str + row.to_csv
     }
-    table = CSV.parse(str, headers:true, converters: :numeric, header_converters: :symbol)
+    table = CSV.parse(str, headers:true, converters: :numeric)
     str = []
   else
     table.each { |row| 
@@ -75,13 +75,13 @@ yaml.each { |ptn|
       if flg == "true" then
         case ptn["job"]
         when "script"
-          key = ptn["key"].to_sym
+          key = ptn["key"]
           val = row[key]
           erb = ERB.new(ptn["param"])
           new_val = erb.result(binding)
           row[key] = new_val.to_i
         when "hash"
-          key = ptn["key"].to_sym
+          key = ptn["key"]
           val = row[key]
           new_val = ptn["param"][val]
           if new_val == nil then

@@ -13,7 +13,7 @@
 -
         job:    hash
         key:    a
-        cond:   <%= (row[:b] == 10) %>
+        cond:   <%= (row["b"] == 10) %>
         param:  
                 1: A
                 2: B
