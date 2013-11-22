@@ -1,4 +1,8 @@
 -
+        job:    sort
+        key:    d
+        param:  descending # ascending
+-
         job:    script
         key:    c
         param:  <%= val * 10 %>

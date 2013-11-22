@@ -48,26 +48,21 @@ table = CSV.table($inputfilename)
 yaml = YAML.load_file($convertfilename)
 
 yaml.each { |ptn| 
-  case ptn["job"]
-  when "script"
-    table.each { |row| 
-      flg = "false"
-      if ptn["cond"] == nil then
-        flg = "true"
-      else
-        erb = ERB.new(ptn["cond"])
-        flg = erb.result(binding)
-      end
-      
-      if flg == "true" then
-        key = ptn["key"].to_sym
-        val = row[key]
-        erb = ERB.new(ptn["param"])
-        new_val = erb.result(binding)
-        row[key] = new_val.to_i
-      end
+  if ptn["job"] == "sort" then
+    str = []
+    key = ptn["key"].to_sym
+    if ptn["param"] == "ascending" then
+      new_table = table.sort_by { |row| row[key] }
+    else
+      new_table = table.sort_by { |row| row[key] * -1 }
+    end
+    str = table.headers.to_csv
+    new_table.each { |row|
+      str = str + row.to_csv
     }
-  when "hash"
+    table = CSV.parse(str, headers:true, converters: :numeric, header_converters: :symbol)
+    str = []
+  else
     table.each { |row| 
       flg = "false"
       if ptn["cond"] == nil then
@@ -78,15 +73,25 @@ yaml.each { |ptn|
       end
       
       if flg == "true" then
-        key = ptn["key"].to_sym
-        val = row[key]
-        new_val = ptn["param"][val]
-        if new_val == nil then
-          row[key] = val
-        else
-          row[key] = new_val
+        case ptn["job"]
+        when "script"
+          key = ptn["key"].to_sym
+          val = row[key]
+          erb = ERB.new(ptn["param"])
+          new_val = erb.result(binding)
+          row[key] = new_val.to_i
+        when "hash"
+          key = ptn["key"].to_sym
+          val = row[key]
+          new_val = ptn["param"][val]
+          if new_val == nil then
+            row[key] = val
+          else
+            row[key] = new_val
+          end
         end
       end
+      flg = "false"
     }
   end
 }
