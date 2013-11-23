@@ -9,6 +9,11 @@ Copyright(c) 2013 steelpipe75
 Released under the MIT license.
 https://github.com/steelpipe75/Barlog/blob/master/MIT-LICENSE.txt
 
+Includes Kwalify
+http://www.kuwata-lab.com/kwalify/
+copyright(c) 2005-2010 kuwata-lab all rights reserved.
+Released under the MIT License.
+
 =end
 
 ###
@@ -18,15 +23,35 @@ require 'pp'
 require 'optparse'
 require 'csv'
 require 'yaml'
+require 'kwalify'
 require 'erb'
 
 # parameter
 
 Version = "v0.1"
 
+# global variable
 $inputfilename = "input.csv"
 $outputfilename = "output.csv"
 $convertfilename = "convert.yaml"
+
+$SCHEMA_DEF = <<EOS
+type: seq
+sequence:
+  - type: map
+    mapping:
+      "job":
+        required: true
+        type: str
+      "key":
+        required: true
+        type: str
+      "cond":
+        type: str
+      "param":
+        required: true
+        type: any
+EOS
 
 # option parser
 def option_parse(argv)
@@ -42,10 +67,54 @@ def option_parse(argv)
   puts sprintf("convertfile\t= \"%s\"\n",$convertfilename)
 end
 
+# validator
+class FormatValidator < Kwalify::Validator
+  @@schema = YAML.load($SCHEMA_DEF)
+
+  def initialize()
+    super(@@schema)
+  end
+
+end
+
+# entry point
+
 option_parse(ARGV)
 
 table = CSV.read($inputfilename, headers:true, converters: :numeric)
-yaml = YAML.load_file($convertfilename)
+
+begin
+  c_file = File.read($convertfilename)
+rescue => ex
+  STDERR.puts "Error: convertfile can not open\n"
+  STDERR.puts sprintf("\t%s\n" ,ex.message)
+  return 1
+end
+
+c_str = ""
+
+c_file.each_line do |line|
+  while /\t+/ =~ line
+    n = $&.size * 8 - $`.size % 8
+    line.sub!(/\t+/, " " * n)
+  end
+  c_str << line
+end
+
+parser = Kwalify::Parser.new(c_str)
+yaml = parser.parse()
+validator = FormatValidator.new
+errors = validator.validate(yaml)
+if !errors || errors.empty? then
+else
+  STDERR.puts "Error: invalid format file\n"
+  parser.set_errors_linenum(errors)
+  errors.each do |error|
+    STDERR.puts sprintf( "\t%s (line %s) [%s] %s\n",$convertfilename,error.linenum,error.path,error.message)
+  end
+  return 1
+end
+
 
 yaml.each { |ptn| 
   if ptn["job"] == "sort" then
