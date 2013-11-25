@@ -88,7 +88,7 @@ begin
 rescue => ex
   STDERR.puts "Error: convertfile can not open\n"
   STDERR.puts sprintf("\t%s\n" ,ex.message)
-  return 1
+  exit 1
 end
 
 c_str = ""
@@ -113,7 +113,7 @@ else
   errors.each do |error|
     STDERR.puts sprintf( "\t%s (line %s) [%s] %s\n",$convertfilename,error.linenum,error.path,error.message)
   end
-  return 1
+  exit 1
 end
 
 
