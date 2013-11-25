@@ -42,7 +42,10 @@ sequence:
     mapping:
       "job":
         required: true
-        type: str
+        enum: 
+          - sort
+          - script
+          - hash
       "key":
         required: true
         type: str
