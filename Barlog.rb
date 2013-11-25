@@ -93,13 +93,13 @@ end
 
 c_str = ""
 
-c_file.each_line do |line|
+c_file.each_line { |line|
   while /\t+/ =~ line
     n = $&.size * 8 - $`.size % 8
     line.sub!(/\t+/, " " * n)
   end
   c_str << line
-end
+}
 
 parser = Kwalify::Parser.new(c_str)
 yaml = parser.parse()
@@ -110,14 +110,13 @@ if !errors || errors.empty? then
 else
   STDERR.puts "Error: invalid format file\n"
   parser.set_errors_linenum(errors)
-  errors.each do |error|
+  errors.each { |error|
     STDERR.puts sprintf( "\t%s (line %s) [%s] %s\n",$convertfilename,error.linenum,error.path,error.message)
-  end
+  }
   exit 1
 end
 
-
-yaml.each { |ptn| 
+yaml.each { |ptn|
   if ptn["job"] == "sort" then
     str = []
     key = ptn["key"]
@@ -133,7 +132,7 @@ yaml.each { |ptn|
     table = CSV.parse(str, headers:true, converters: :numeric)
     str = []
   else
-    table.each { |row| 
+    table.each { |row|
       flg = "false"
       if ptn["cond"] == nil then
         flg = "true"
@@ -168,6 +167,6 @@ yaml.each { |ptn|
   end
 }
 
-File.open($outputfilename,"w") do |file|
+File.open($outputfilename,"w") { |file|
   file.write table.to_csv
-end
+}
