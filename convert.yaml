@@ -4,12 +4,23 @@
         param:  descending # ascending
 -
         job:    script
+        key:    e
+        param:  
+                - <%= param[row["a"]] %>
+                - 
+                        - x
+                        - y
+                        - z
+-
+        job:    script
         key:    c
-        param:  <%= val * 10 %>
+        param:  
+                - <%= val * 10 %>
 -
         job:    script
         key:    b
-        param:  <%= val / 10 %>
+        param:  
+                - <%= val / 10 %>
 -
         job:    hash
         key:    a

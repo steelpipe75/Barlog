@@ -105,6 +105,7 @@ parser = Kwalify::Parser.new(c_str)
 yaml = parser.parse()
 validator = FormatValidator.new
 errors = validator.validate(yaml)
+
 if !errors || errors.empty? then
 else
   STDERR.puts "Error: invalid format file\n"
@@ -146,9 +147,11 @@ yaml.each { |ptn|
         when "script"
           key = ptn["key"]
           val = row[key]
-          erb = ERB.new(ptn["param"])
+          script = ptn["param"][0]
+          param = ptn["param"][1]
+          erb = ERB.new(script)
           new_val = erb.result(binding)
-          row[key] = new_val.to_i
+          row[key] = new_val
         when "hash"
           key = ptn["key"]
           val = row[key]
