@@ -80,96 +80,99 @@ class FormatValidator < Kwalify::Validator
 
 end
 
-# entry point
+def csv_convert(argv)
+  option_parse(argv)
 
-option_parse(ARGV)
+  table = CSV.read($inputfilename, headers:true, converters: :numeric)
 
-table = CSV.read($inputfilename, headers:true, converters: :numeric)
-
-begin
-  c_file = File.read($convertfilename)
-rescue => ex
-  STDERR.puts "Error: convertfile can not open\n"
-  STDERR.puts sprintf("\t%s\n" ,ex.message)
-  exit 1
-end
-
-c_str = ""
-
-c_file.each_line { |line|
-  while /\t+/ =~ line
-    n = $&.size * 8 - $`.size % 8
-    line.sub!(/\t+/, " " * n)
+  begin
+    c_file = File.read($convertfilename)
+  rescue => ex
+    STDERR.puts "Error: convertfile can not open\n"
+    STDERR.puts sprintf("\t%s\n" ,ex.message)
+    exit 1
   end
-  c_str << line
-}
 
-parser = Kwalify::Parser.new(c_str)
-yaml = parser.parse()
-validator = FormatValidator.new
-errors = validator.validate(yaml)
+  c_str = ""
 
-if !errors || errors.empty? then
-else
-  STDERR.puts "Error: invalid format file\n"
-  parser.set_errors_linenum(errors)
-  errors.each { |error|
-    STDERR.puts sprintf( "\t%s (line %s) [%s] %s\n",$convertfilename,error.linenum,error.path,error.message)
-  }
-  exit 1
-end
-
-yaml.each { |ptn|
-  if ptn["job"] == "sort" then
-    str = []
-    key = ptn["key"]
-    if ptn["param"] == "ascending" then
-      new_table = table.sort_by { |row| row[key] }
-    else
-      new_table = table.sort_by { |row| row[key] * -1 }
+  c_file.each_line { |line|
+    while /\t+/ =~ line
+      n = $&.size * 8 - $`.size % 8
+      line.sub!(/\t+/, " " * n)
     end
-    str = table.headers.to_csv
-    new_table.each { |row|
-      str = str + row.to_csv
-    }
-    table = CSV.parse(str, headers:true, converters: :numeric)
-    str = []
+    c_str << line
+  }
+
+  parser = Kwalify::Parser.new(c_str)
+  yaml = parser.parse()
+  validator = FormatValidator.new
+  errors = validator.validate(yaml)
+
+  if !errors || errors.empty? then
   else
-    table.each { |row|
-      flg = "false"
-      if ptn["cond"] == nil then
-        flg = "true"
+    STDERR.puts "Error: invalid format file\n"
+    parser.set_errors_linenum(errors)
+    errors.each { |error|
+      STDERR.puts sprintf( "\t%s (line %s) [%s] %s\n",$convertfilename,error.linenum,error.path,error.message)
+    }
+    exit 1
+  end
+
+  yaml.each { |ptn|
+    if ptn["job"] == "sort" then
+      str = []
+      key = ptn["key"]
+      if ptn["param"] == "ascending" then
+        new_table = table.sort_by { |row| row[key] }
       else
-        erb = ERB.new(ptn["cond"])
-        flg = erb.result(binding)
+        new_table = table.sort_by { |row| row[key] * -1 }
       end
-      
-      if flg == "true" then
-        case ptn["job"]
-        when "script"
-          key = ptn["key"]
-          val = row[key]
-          script = ptn["param"][0]
-          param = ptn["param"][1]
-          erb = ERB.new(script)
-          new_val = erb.result(binding)
-          row[key] = new_val
-        when "hash"
-          key = ptn["key"]
-          val = row[key]
-          new_val = ptn["param"][val]
-          if new_val == nil then
-            row[key] = val
-          else
+      str = table.headers.to_csv
+      new_table.each { |row|
+        str = str + row.to_csv
+      }
+      table = CSV.parse(str, headers:true, converters: :numeric)
+      str = []
+    else
+      table.each { |row|
+        flg = "false"
+        if ptn["cond"] == nil then
+          flg = "true"
+        else
+          erb = ERB.new(ptn["cond"])
+          flg = erb.result(binding)
+        end
+        
+        if flg == "true" then
+          case ptn["job"]
+          when "script"
+            key = ptn["key"]
+            val = row[key]
+            script = ptn["param"][0]
+            param = ptn["param"][1]
+            erb = ERB.new(script)
+            new_val = erb.result(binding)
             row[key] = new_val
+          when "hash"
+            key = ptn["key"]
+            val = row[key]
+            new_val = ptn["param"][val]
+            if new_val == nil then
+              row[key] = val
+            else
+              row[key] = new_val
+            end
           end
         end
-      end
-      flg = "false"
-    }
-  end
-}
+        flg = "false"
+      }
+    end
+  }
 
-File.open($outputfilename,"w") { |file|
-  file.write table.to_csv
-}
+  File.open($outputfilename,"w") { |file|
+    file.write table.to_csv
+  }
+end
+
+# entry point
+csv_convert(ARGV)
