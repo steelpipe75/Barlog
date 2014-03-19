@@ -87,7 +87,13 @@ end
 def csv_convert(argv)
   option_parse(argv)
 
-  table = CSV.read($inputfilename, headers:true, converters: :numeric)
+  begin
+    table = CSV.read($inputfilename, headers:true, converters: :numeric)
+  rescue => ex
+    $stderr_str.push "Error: inputfile can not open\n"
+    $stderr_str.push sprintf("\t%s\n" ,ex.message)
+    return 1
+  end
 
   begin
     c_file = File.read($convertfilename)
