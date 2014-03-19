@@ -35,6 +35,9 @@ $inputfilename = "input.csv"
 $outputfilename = "output.csv"
 $convertfilename = "convert.yaml"
 
+$stdout_str = []
+$stderr_str = []
+
 $SCHEMA_DEF = <<EOS
 type: seq
 sequence:
@@ -65,9 +68,9 @@ def option_parse(argv)
 
   opt.parse(argv)
 
-  puts sprintf("inputfile\t= \"%s\"\n",$inputfilename)
-  puts sprintf("outputfile\t= \"%s\"\n",$outputfilename)
-  puts sprintf("convertfile\t= \"%s\"\n",$convertfilename)
+  $stdout_str.push sprintf("inputfile\t= \"%s\"\n",$inputfilename)
+  $stdout_str.push sprintf("outputfile\t= \"%s\"\n",$outputfilename)
+  $stdout_str.push sprintf("convertfile\t= \"%s\"\n",$convertfilename)
 end
 
 # validator
@@ -88,9 +91,9 @@ def csv_convert(argv)
   begin
     c_file = File.read($convertfilename)
   rescue => ex
-    STDERR.puts "Error: convertfile can not open\n"
-    STDERR.puts sprintf("\t%s\n" ,ex.message)
-    exit 1
+    $stderr_str.push "Error: convertfile can not open\n"
+    $stderr_str.push sprintf("\t%s\n" ,ex.message)
+    return 1
   end
 
   c_str = ""
@@ -110,12 +113,12 @@ def csv_convert(argv)
 
   if !errors || errors.empty? then
   else
-    STDERR.puts "Error: invalid format file\n"
+    $stderr_str.push "Error: invalid format file\n"
     parser.set_errors_linenum(errors)
     errors.each { |error|
-      STDERR.puts sprintf( "\t%s (line %s) [%s] %s\n",$convertfilename,error.linenum,error.path,error.message)
+      $stderr_str.push sprintf( "\t%s (line %s) [%s] %s\n",$convertfilename,error.linenum,error.path,error.message)
     }
-    exit 1
+    return 1
   end
 
   yaml.each { |ptn|
@@ -172,7 +175,24 @@ def csv_convert(argv)
   File.open($outputfilename,"w") { |file|
     file.write table.to_csv
   }
+
+  return 0
 end
 
 # entry point
-csv_convert(ARGV)
+$stdout_str = []
+$stderr_str = []
+ret = csv_convert(ARGV)
+$stdout_str.each do |str|
+  STDOUT.puts(str)
+end
+puts "========================"
+$stdout.flush
+if ret != 0 then
+  $stderr_str.each { |str|
+    STDERR.puts(str)
+  }
+  exit ret
+else
+  puts "Success"
+end
