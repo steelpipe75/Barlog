@@ -50,6 +50,7 @@ sequence:
           - sort
           - script
           - hash
+          - column_sort
       "key":
         required: true
         type: str
@@ -130,7 +131,6 @@ def csv_convert(argv)
 
   yaml.each { |ptn|
     if ptn["job"] == "sort" then
-      str = []
       key = ptn["key"]
       if ptn["param"] == "ascending" then
         new_table = table.sort_by { |row| row[key] }
@@ -142,7 +142,31 @@ def csv_convert(argv)
         str = str + row.to_csv
       }
       table = CSV.parse(str, headers:true, converters: :numeric)
-      str = []
+    elsif ptn["job"] == "column_sort" then
+      old_table = table.to_a.transpose
+      tmp_table = old_table
+      new_table = []
+      ptn["param"].each { |k|
+        tmp_table = []
+        old_table.each { |c|
+          if c[0] == k then
+            new_table.push c
+          else
+            tmp_table.push c
+          end
+        }
+        old_table = tmp_table
+      }
+      old_table.each { |c|
+        new_table.push c
+      }
+      tmp_table = new_table.transpose
+      str = tmp_table[0].to_csv
+      tmp_table = tmp_table[1..tmp_table.size]
+      tmp_table.each { |row|
+        str = str + row.to_csv
+      }
+      table = CSV.parse(str, headers:true, converters: :numeric)
     else
       table.each { |row|
         flg = "false"
