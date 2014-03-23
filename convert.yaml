@@ -43,3 +43,9 @@
                 100: AAA
                 200: BBB
                 300: CCC
+-
+        job:    column_sort
+        key:    dumy
+        param:  
+                - "e"
+                - "c"

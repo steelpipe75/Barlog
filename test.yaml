@@ -1,7 +1,0 @@
--
-        job:    column_sort
-        key:    dumy
-        param:  
-                - "b"
-                - "d"
-                - "c"
