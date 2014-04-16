@@ -198,7 +198,6 @@ def csv_convert(argv)
             end
           end
         end
-        flg = "false"
       }
     end
   }
