@@ -131,80 +131,104 @@ def csv_convert(argv)
 
   yaml.each { |ptn|
     if ptn["job"] == "sort" then
-      key = ptn["key"]
-      if ptn["param"] == "ascending" then
-        new_table = table.sort_by { |row| row[key] }
-      else
-        new_table = table.sort_by { |row| row[key] * -1 }
-      end
-      str = table.headers.to_csv
-      new_table.each { |row|
-        str = str + row.to_csv
-      }
-      table = CSV.parse(str, headers:true, converters: :numeric)
-    elsif ptn["job"] == "column_sort" then
-      old_table = table.to_a.transpose
-      tmp_table = old_table
-      new_table = []
-      ptn["param"].each { |k|
-        tmp_table = []
-        old_table.each { |c|
-          if c[0] == k then
-            new_table.push c
-          else
-            tmp_table.push c
-          end
-        }
-        old_table = tmp_table
-      }
-      old_table.each { |c|
-        new_table.push c
-      }
-      tmp_table = new_table.transpose
-      str = tmp_table[0].to_csv
-      tmp_table = tmp_table[1..tmp_table.size]
-      tmp_table.each { |row|
-        str = str + row.to_csv
-      }
-      table = CSV.parse(str, headers:true, converters: :numeric)
-    else
-      table.each { |row|
-        flg = "false"
-        if ptn["cond"] == nil then
-          flg = "true"
+      begin
+        key = ptn["key"]
+        if ptn["param"] == "ascending" then
+          new_table = table.sort_by { |row| row[key] }
         else
-          erb = ERB.new(ptn["cond"])
-          flg = erb.result(binding)
+          new_table = table.sort_by { |row| row[key] * -1 }
         end
-        
-        if flg == "true" then
-          case ptn["job"]
-          when "script"
-            key = ptn["key"]
-            val = row[key]
-            script = ptn["param"][0]
-            param = ptn["param"][1]
-            erb = ERB.new(script)
-            new_val = erb.result(binding)
-            row[key] = new_val
-          when "hash"
-            key = ptn["key"]
-            val = row[key]
-            new_val = ptn["param"][val]
-            if new_val == nil then
-              row[key] = val
+        str = table.headers.to_csv
+        new_table.each { |row|
+          str = str + row.to_csv
+        }
+        table = CSV.parse(str, headers:true, converters: :numeric)
+      rescue => ex
+        $stderr_str.push "Error: exception in convert \n"
+        $stderr_str.push sprintf("\t%s\n" ,ex.message)
+        return 1
+      end
+    elsif ptn["job"] == "column_sort" then
+      begin
+        old_table = table.to_a.transpose
+        tmp_table = old_table
+        new_table = []
+        ptn["param"].each { |k|
+          tmp_table = []
+          old_table.each { |c|
+            if c[0] == k then
+              new_table.push c
             else
+              tmp_table.push c
+            end
+          }
+          old_table = tmp_table
+        }
+        old_table.each { |c|
+          new_table.push c
+        }
+        tmp_table = new_table.transpose
+        str = tmp_table[0].to_csv
+        tmp_table = tmp_table[1..tmp_table.size]
+        tmp_table.each { |row|
+          str = str + row.to_csv
+        }
+        table = CSV.parse(str, headers:true, converters: :numeric)
+      rescue => ex
+        $stderr_str.push "Error: exception in convert \n"
+        $stderr_str.push sprintf("\t%s\n" ,ex.message)
+        return 1
+      end
+    else
+      begin
+        table.each_with_index { |row, idx|
+          flg = "false"
+          if ptn["cond"] == nil then
+            flg = "true"
+          else
+            erb = ERB.new(ptn["cond"])
+            flg = erb.result(binding)
+          end
+          
+          if flg == "true" then
+            case ptn["job"]
+            when "script"
+              key = ptn["key"]
+              val = row[key]
+              script = ptn["param"][0]
+              param = ptn["param"][1]
+              erb = ERB.new(script)
+              new_val = erb.result(binding)
               row[key] = new_val
+            when "hash"
+              key = ptn["key"]
+              val = row[key]
+              new_val = ptn["param"][val]
+              if new_val == nil then
+                row[key] = val
+              else
+                row[key] = new_val
+              end
             end
           end
-        end
-      }
+        }
+      rescue => ex
+        $stderr_str.push sprintf("Error: exception in convert (row %d) \n" ,idx)
+        $stderr_str.push sprintf("\t%s\n" ,ex.message)
+        return 1
+      end
     end
   }
 
-  File.open($outputfilename,"w") { |file|
-    file.write table.to_csv
-  }
+  begin
+    File.open($outputfilename,"w") { |file|
+      file.write table.to_csv
+    }
+  rescue => ex
+    $stderr_str.push "Error: inputfile can not open\n"
+    $stderr_str.push sprintf("\t%s\n" ,ex.message)
+    return 1
+  end
 
   return 0
 end
