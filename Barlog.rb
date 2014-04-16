@@ -29,7 +29,7 @@ require 'tk'
 
 # parameter
 
-Version = "v1.0"
+Version = "v1.1"
 
 # global variable
 $inputfilename = "input.csv"
