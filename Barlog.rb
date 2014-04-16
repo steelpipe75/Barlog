@@ -26,6 +26,7 @@ require 'yaml'
 require 'kwalify'
 require 'erb'
 require 'tk'
+require 'json'
 
 # parameter
 
@@ -73,6 +74,7 @@ def option_parse(argv)
   $stdout_str.push sprintf("inputfile\t= \"%s\"\n",$inputfilename)
   $stdout_str.push sprintf("outputfile\t= \"%s\"\n",$outputfilename)
   $stdout_str.push sprintf("convertfile\t= \"%s\"\n",$convertfilename)
+  $stdout_str.push "========================\n"
 end
 
 # validator
@@ -130,6 +132,9 @@ def csv_convert(argv)
   end
 
   yaml.each { |ptn|
+    
+    $stdout_str.push ptn.to_json + "\n"
+    
     if ptn["job"] == "sort" then
       begin
         key = ptn["key"]
