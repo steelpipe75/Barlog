@@ -185,8 +185,8 @@ def csv_convert(argv)
         return 1
       end
     else
-      begin
-        table.each_with_index { |row, idx|
+      table.each_with_index { |row, idx|
+        begin
           flg = "false"
           if ptn["cond"] == nil then
             flg = "true"
@@ -216,12 +216,12 @@ def csv_convert(argv)
               end
             end
           end
-        }
-      rescue => ex
-        $stderr_str.push sprintf("Error: exception in convert (row %d) \n" ,idx)
-        $stderr_str.push sprintf("\t%s\n" ,ex.message)
-        return 1
-      end
+        rescue => ex
+          $stderr_str.push sprintf("Error: exception in convert (row %d) \n" ,idx)
+          $stderr_str.push sprintf("\t%s\n" ,ex.message)
+          return 1
+        end
+      }
     end
   }
 
