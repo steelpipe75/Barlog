@@ -30,7 +30,7 @@ require 'json'
 
 # parameter
 
-Version = "v1.1"
+Version = "v1.1.1"
 
 # global variable
 $inputfilename = "input.csv"
