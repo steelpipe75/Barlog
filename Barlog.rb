@@ -98,6 +98,11 @@ def csv_convert(argv)
     return 1
   end
 
+  if table.length == 0 then
+    $stderr_str.push "Error: there is no data in the inputfile \n"
+    return 1
+  end
+
   begin
     c_file = File.read($convertfilename)
   rescue => ex
