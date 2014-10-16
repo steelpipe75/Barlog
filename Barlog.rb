@@ -25,7 +25,6 @@ require 'csv'
 require 'yaml'
 require 'kwalify'
 require 'erb'
-require 'tk'
 require 'json'
 
 # parameter
@@ -243,190 +242,20 @@ def csv_convert(argv)
   return 0
 end
 
-
-
-# gui(tk)
-def getopenconvertfile
-  return Tk.getOpenFile('title' => 'ファイルを開く',
-                        'defaultextension' => 'sgf', 
-                        'filetypes' => "{YAMLファイル {.yaml}} {全てのファイル {.*}}")
-end
-
-def getopeninputfile
-  return Tk.getOpenFile('title' => 'ファイルを開く',
-                        'defaultextension' => 'sgf', 
-                        'filetypes' => "{CSVファイル {.csv}} {全てのファイル {.*}}")
-end
-
-def getsavefile
-  return Tk.getSaveFile('title' => 'ファイルを開く',
-                        'defaultextension' => 'sgf', 
-                        'filetypes' => "{CSVファイル {.csv}} {全てのファイル {.*}}")
-end
-
-def start_gui
-  convertfile_var = TkVariable.new('')
-  inputfile_var = TkVariable.new('')
-  outputfile_var = TkVariable.new('')
-
-  gui_title = sprintf("Barlog %s", Version)
-
-  window = TkRoot.new {
-    title gui_title
-    resizable [0,0]
-  }
-
-  fomrat_row = 0
-
-  convertlabel = TkLabel.new {
-    text 'convertfile'
-    width 10
-    anchor 'w'
-    grid 'row'=>fomrat_row, 'column'=>0, 'sticky' => 'news'
-  }
-
-  convertfile = TkEntry.new {
-    width 40
-    grid 'row'=>fomrat_row, 'column'=>1, 'sticky' => 'news'
-  }
-
-  convertfile.textvariable = convertfile_var
-
-  convertbutton = TkButton.new {
-    text 'select'
-    width 10
-    grid 'row'=>fomrat_row, 'column'=>2, 'sticky' => 'news'
-  }
-
-  convertbutton.command( proc{ convertfile.value = getopenconvertfile } )
-
-  input_row = 1
-
-  inputlabel = TkLabel.new {
-    text 'inputfile'
-    width 10
-    anchor 'w'
-    grid 'row'=>input_row, 'column'=>0, 'sticky' => 'news'
-  }
-
-  inputfile = TkEntry.new {
-    width 40
-    grid 'row'=>input_row, 'column'=>1, 'sticky' => 'news'
-  }
-
-  inputfile.textvariable = inputfile_var
-
-  inputbutton = TkButton.new {
-    text 'select'
-    width 10
-    grid 'row'=>input_row, 'column'=>2, 'sticky' => 'news'
-  }
-
-  inputbutton.command( proc{ inputfile.value = getopeninputfile } )
-
-  output_row = 2
-
-  outputlabel = TkLabel.new {
-    text 'outputfile'
-    width 10
-    anchor 'w'
-    grid 'row'=>output_row, 'column'=>0, 'sticky' => 'news'
-  }
-
-  outputfile = TkEntry.new {
-    width 40
-    grid 'row'=>output_row, 'column'=>1, 'sticky' => 'news'
-  }
-
-  outputfile.textvariable = outputfile_var
-
-  outputbutton = TkButton.new {
-    text 'select'
-    width 10
-    grid 'row'=>output_row, 'column'=>2, 'sticky' => 'news'
-  }
-
-  outputbutton.command( proc{ outputfile.value = getsavefile } )
-
-  exec_row = 3
-
-  execbutton = TkButton.new {
-    text 'exec'
-    grid 'row'=>exec_row, 'column'=>0, 'columnspan'=>3, 'sticky' => 'news'
-  }
-
-  resultlabel = TkLabel.new {
-    text 'result'
-    width 10
-    anchor 'w'
-    grid 'row'=>exec_row+1, 'column'=>0, 'sticky' => 'news'
-  }
-
-  result_text = TkText.new {
-    state 'disabled'
-    height 10
-    grid 'row'=>exec_row+2, 'column'=>0, 'columnspan'=>3, 'sticky' => 'news'
-  }
-
-  execbutton.command(
-    proc {
-      $stdout_str = []
-      $stderr_str = []
-      result_text.state 'normal'
-      result_text.delete('0.0', 'end')
-      gui_arg = []
-      if convertfile_var.to_s.length > 0 then
-        gui_arg.push '-c'
-        gui_arg.push convertfile_var.to_s
-      end
-      if inputfile_var.to_s.length > 0 then
-        gui_arg.push '-i'
-        gui_arg.push inputfile_var.to_s
-      end
-      if outputfile_var.to_s.length > 0 then
-        gui_arg.push '-o'
-        gui_arg.push outputfile_var.to_s
-      end
-      csv_convert(gui_arg)
-      $stdout_str.each do |str|
-        result_text.insert('end', str)
-      end
-      separator = sprintf("========================\n")
-      result_text.insert('end', separator)
-      if $stderr_str.empty? then
-        result_text.insert('end', 'Success')
-      else
-        $stderr_str.each do |str|
-         result_text.insert('end', str)
-        end
-      end
-      result_text.state 'disabled'
-    }
-  )
-
-  Tk.mainloop
-end
-
-
-
 # entry point
-if ARGV.empty? then
-  start_gui
+$stdout_str = []
+$stderr_str = []
+ret = csv_convert(ARGV)
+$stdout_str.each do |str|
+  STDOUT.puts(str)
+end
+puts "========================"
+$stdout.flush
+if ret != 0 then
+  $stderr_str.each { |str|
+    STDERR.puts(str)
+  }
+  exit ret
 else
-  $stdout_str = []
-  $stderr_str = []
-  ret = csv_convert(ARGV)
-  $stdout_str.each do |str|
-    STDOUT.puts(str)
-  end
-  puts "========================"
-  $stdout.flush
-  if ret != 0 then
-    $stderr_str.each { |str|
-      STDERR.puts(str)
-    }
-    exit ret
-  else
-    puts "Success"
-  end
+  puts "Success"
 end
