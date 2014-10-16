@@ -67,9 +67,9 @@ def option_parse(argv)
   opt.on('-i inputfile',  '--input inputfile',        '入力ファイル指定')     { |v| $inputfilename = v }
   opt.on('-o outputfile', '--output outputfile',      '出力ファイル指定')     { |v| $outputfilename = v }
   opt.on('-c convertfile', '--convert convertfile',   '変換指示ファイル指定') { |v| $convertfilename = v }
-
+  
   opt.parse(argv)
-
+  
   $stdout_str.push sprintf("inputfile\t= \"%s\"\n",$inputfilename)
   $stdout_str.push sprintf("outputfile\t= \"%s\"\n",$outputfilename)
   $stdout_str.push sprintf("convertfile\t= \"%s\"\n",$convertfilename)
@@ -79,16 +79,16 @@ end
 # validator
 class FormatValidator < Kwalify::Validator
   @@schema = YAML.load($SCHEMA_DEF)
-
+  
   def initialize()
     super(@@schema)
   end
-
+  
 end
 
 def csv_convert(argv)
   option_parse(argv)
-
+  
   begin
     table = CSV.read($inputfilename, headers:true, converters: :numeric)
   rescue => ex
@@ -96,12 +96,12 @@ def csv_convert(argv)
     $stderr_str.push sprintf("\t%s\n" ,ex.message)
     return 1
   end
-
+  
   if table.length == 0 then
     $stderr_str.push "Error: there is no data in the inputfile \n"
     return 1
   end
-
+  
   begin
     c_file = File.read($convertfilename)
   rescue => ex
@@ -109,9 +109,9 @@ def csv_convert(argv)
     $stderr_str.push sprintf("\t%s\n" ,ex.message)
     return 1
   end
-
+  
   c_str = ""
-
+  
   c_file.each_line { |line|
     while /\t+/ =~ line
       n = $&.size * 8 - $`.size % 8
@@ -119,12 +119,12 @@ def csv_convert(argv)
     end
     c_str << line
   }
-
+  
   parser = Kwalify::Parser.new(c_str)
   yaml = parser.parse()
   validator = FormatValidator.new
   errors = validator.validate(yaml)
-
+  
   if !errors || errors.empty? then
   else
     $stderr_str.push "Error: invalid format file\n"
@@ -134,7 +134,7 @@ def csv_convert(argv)
     }
     return 1
   end
-
+  
   yaml.each { |ptn|
     
     $stdout_str.push ptn.to_json + "\n"
@@ -228,7 +228,7 @@ def csv_convert(argv)
       }
     end
   }
-
+  
   begin
     File.open($outputfilename,"w") { |file|
       file.write table.to_csv
@@ -238,7 +238,7 @@ def csv_convert(argv)
     $stderr_str.push sprintf("\t%s\n" ,ex.message)
     return 1
   end
-
+  
   return 0
 end
 
