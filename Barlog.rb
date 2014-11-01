@@ -35,6 +35,7 @@ Version = "v1.1.2"
 $inputfilename = "input.csv"
 $outputfilename = "output.csv"
 $convertfilename = "convert.yaml"
+$delimiter = ","
 
 $stdout_str = []
 $stderr_str = []
@@ -67,13 +68,18 @@ def option_parse(argv)
   opt.on('-i inputfile',  '--input inputfile',        '入力ファイル指定')     { |v| $inputfilename = v }
   opt.on('-o outputfile', '--output outputfile',      '出力ファイル指定')     { |v| $outputfilename = v }
   opt.on('-c convertfile', '--convert convertfile',   '変換指示ファイル指定') { |v| $convertfilename = v }
+  opt.on('-d delimiter',  '--delimiter delimiter','デリミタ指定') { |v| $delimiter = v }
   
   opt.parse(argv)
   
   $stdout_str.push sprintf("inputfile\t= \"%s\"\n",$inputfilename)
   $stdout_str.push sprintf("outputfile\t= \"%s\"\n",$outputfilename)
   $stdout_str.push sprintf("convertfile\t= \"%s\"\n",$convertfilename)
+  $stdout_str.push sprintf("delimiter\t= \"%s\"\n",$delimiter)
   $stdout_str.push "========================\n"
+  if $delimiter == "\\t" || $delimiter == "\\T" then
+    $delimiter = "\t"
+  end
 end
 
 # validator
@@ -90,7 +96,7 @@ def csv_convert(argv)
   option_parse(argv)
   
   begin
-    table = CSV.read($inputfilename, headers:true, converters: :numeric)
+    table = CSV.read($inputfilename, headers:true, converters: :numeric, col_sep: $delimiter)
   rescue => ex
     $stderr_str.push "Error: inputfile can not open\n"
     $stderr_str.push sprintf("\t%s\n" ,ex.message)
